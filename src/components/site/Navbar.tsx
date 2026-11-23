@@ -31,25 +31,47 @@ export function Navbar({ siteTitle, whatsappUrl }: NavbarProps) {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Scroll-spy: highlight the nav item for the section currently in view.
+  /**
+   * Scroll-spy: destaca o item do menu da seção que está em leitura.
+   *
+   * Antes usava IntersectionObserver com uma faixa estreita
+   * (`rootMargin: '-45% 0px -50% 0px'`). O callback só dispara quando
+   * uma seção ENTRA ou SAI da faixa, e nunca limpa o estado quando
+   * NENHUMA seção está dentro dela — o resultado era um destaque
+   * obsoleto: na seção do eGPU (que fica entre Serviços e Notebooks e
+   * não tem item de menu) o menu continuava marcando a última seção
+   * lida, e ao voltar para o topo continuava marcando "Contato".
+   *
+   * Agora a seção ativa é derivada da posição: a última cujo topo já
+   * passou da linha de leitura (35% da altura da janela). É
+   * determinístico, não guarda estado obsoleto e não depende de
+   * thresholds frágeis do observer.
+   */
   useEffect(() => {
-    const sections = NAV_LINKS.map((l) => document.querySelector(l.href)).filter(
-      (el): el is Element => el !== null,
+    const sections = NAV_LINKS.map((link) => ({
+      href: link.href,
+      element: document.querySelector(link.href),
+    })).filter(
+      (item): item is { href: string; element: Element } => item.element !== null,
     );
     if (sections.length === 0) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-        if (visible) setActiveSection(`#${visible.target.id}`);
-      },
-      { rootMargin: '-45% 0px -50% 0px', threshold: [0, 0.25, 0.5, 1] },
-    );
+    const onScroll = () => {
+      const readingLine = window.innerHeight * 0.35;
+      let current = '';
+      for (const { href, element } of sections) {
+        if (element.getBoundingClientRect().top <= readingLine) current = href;
+      }
+      setActiveSection(current);
+    };
 
-    sections.forEach((s) => observer.observe(s));
-    return () => observer.disconnect();
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
   }, []);
 
   // Lock the page behind the mobile drawer and close it on Escape.
