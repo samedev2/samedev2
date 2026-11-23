@@ -21,6 +21,17 @@ export interface LoginModalProps {
 
 const FORM_ID = 'login-modal-form';
 
+/**
+ * E-mail de administrador configurado no build.
+ *
+ * O placeholder precisa bater com o e-mail real: é o mesmo que a RLS
+ * compara (`auth.jwt() ->> 'email'`) e o mesmo que o `schema.sql` usa
+ * no bloco de políticas. Um placeholder fixo mente assim que o técnico
+ * troca o e-mail.
+ */
+const ADMIN_EMAIL_PLACEHOLDER =
+  import.meta.env.VITE_ADMIN_EMAIL?.trim() || 'admin@fortaltech.com.br';
+
 function errorMessage(error: unknown, fallback: string): string {
   if (error instanceof Error && error.message) return error.message;
   if (typeof error === 'string' && error.trim()) return error;
@@ -102,7 +113,7 @@ export function LoginModal({ open, onClose, onLogin }: LoginModalProps): JSX.Ele
           autoComplete="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          placeholder="admin@fortaltech.com.br"
+          placeholder={ADMIN_EMAIL_PLACEHOLDER}
         />
 
         <TextInput

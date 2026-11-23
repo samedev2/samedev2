@@ -38,6 +38,30 @@ Não há fallback embutido no código: se as variáveis faltarem, o app mostra
 uma **tela de configuração pendente** com o `.env` esperado, em vez de um
 erro genérico de conexão.
 
+### Desenvolvimento sem banco (mock local)
+
+Enquanto o Supabase não está no ar, o projeto sobe com um **mock local** que
+responde na porta `54321` (a mesma do Supabase local oficial) com dados de
+exemplo — vitrine, serviços, textos e mensagens.
+
+```bash
+npm run mock    # terminal 1 — sobe o mock na porta 54321
+npm run dev     # terminal 2 — sobe o Vite na porta 3000
+```
+
+O `.env.local` precisa apontar para ele:
+
+```
+VITE_SUPABASE_URL=http://localhost:54321
+VITE_SUPABASE_ANON_KEY=mock-anon-key
+VITE_ADMIN_EMAIL=admin@exemplo.com
+```
+
+No login do painel admin, **qualquer senha** funciona para o e-mail
+configurado. Os dados vivem na memória: nada é persistido, e o mock morre com
+o processo. Serve para ajustar a interface sem depender do banco — não
+substitui o `schema.sql` nem o Supabase de verdade.
+
 ## Banco de dados
 
 O app usa **Supabase self-hosted** (compatível com a stack oficial
